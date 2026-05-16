@@ -23,6 +23,11 @@ const Nav = () => {
             </a>
           </li>
           <li>
+            <a href="/products" className="hover:text-gray-200">
+              Products
+            </a>
+          </li>
+          <li>
             <a href="/" className="hover:text-gray-200">
               Login
             </a>
