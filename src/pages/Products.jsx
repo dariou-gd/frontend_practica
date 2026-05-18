@@ -1,20 +1,21 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import { useProducts } from "../hooks/useProducts";
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
   const navigate = useNavigate();
+
   const { token, loadingAuth } = useAuth();
 
-  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
+  const { products, loading, error, addProduct, deleteProduct, updateProduct } =
+    useProducts();
+
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [showModal, setShowModal] = useState(false);
+
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const [newProduct, setNewProduct] = useState({
     title: "",
@@ -23,34 +24,78 @@ const Products = () => {
     category: "",
   });
 
+  const itemsPerPage = 5;
+
+  const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
+
   useEffect(() => {
     if (loadingAuth) return;
 
     if (!token) {
       navigate("/");
     }
-
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("https://fakestoreapi.com/products");
-        if (!response.ok) {
-          throw new Error("Error al cargar los productos");
-        }
-
-        const data = await response.json();
-        setProducts(data);
-      } catch (err) {
-        setError(err.message || "No se pudieron cargar los productos");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [navigate, token]);
+  }, [navigate, loadingAuth, token]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setNewProduct({
+      ...newProduct,
+      [name]: value,
+    });
+  };
+
+  const resetForm = () => {
+    setNewProduct({
+      title: "",
+      price: "",
+      description: "",
+      category: "",
+    });
+
+    setEditingProduct(null);
+
+    setShowModal(false);
+  };
+
+  const handleSaveProduct = () => {
+    if (
+      !newProduct.title ||
+      !newProduct.price ||
+      !newProduct.description ||
+      !newProduct.category
+    ) {
+      return;
+    }
+
+    if (editingProduct) {
+      updateProduct(editingProduct, newProduct);
+    } else {
+      addProduct(newProduct);
+    }
+
+    resetForm();
+  };
+
+  const handleEditClick = (product) => {
+    setEditingProduct(product);
+
+    setNewProduct({
+      title: product.title,
+      price: product.price,
+      description: product.description,
+      category: product.category,
+    });
+
+    setShowModal(true);
   };
 
   return (
@@ -80,7 +125,7 @@ const Products = () => {
         </div>
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-slate-200">
-          <div className="border-b border-slate-200 px-6 py-4 bg-slate-100">
+          <div className="border-b border-slate-200 bg-slate-100 px-6 py-4">
             <h2 className="text-lg font-medium text-slate-900">Catálogo</h2>
           </div>
 
@@ -101,50 +146,60 @@ const Products = () => {
                       <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                         Título
                       </th>
+
                       <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                         Precio
                       </th>
+
                       <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                         Descripción
                       </th>
+
                       <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                         Categoría
                       </th>
+
                       <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                         Acciones
                       </th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {currentProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 align-top text-sm text-slate-700 max-w-xl break-words">
+                        <td className="max-w-xl break-words px-6 py-4 align-top text-sm text-slate-700">
                           {product.title}
                         </td>
+
                         <td className="px-6 py-4 align-top text-sm font-semibold text-slate-900">
                           ${product.price.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 align-top text-sm text-slate-600 max-w-2xl break-words">
+
+                        <td className="max-w-2xl break-words px-6 py-4 align-top text-sm text-slate-600">
                           {product.description}
                         </td>
+
                         <td className="px-6 py-4 align-top text-sm text-slate-700">
                           <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                             {product.category}
                           </span>
                         </td>
+
                         <td className="px-6 py-4 align-top text-sm text-slate-700">
                           <div className="flex flex-wrap gap-2">
                             <button
-                              type="button"
-                              className="rounded-full w-full bg-blue-600 px-3 py-1 text-white transition hover:bg-blue-700"
+                              onClick={() => handleEditClick(product)}
+                              className="rounded-full bg-blue-600 px-3 py-1 text-white transition hover:bg-blue-700"
                             >
-                              Ver
+                              Editar
                             </button>
+
                             <button
-                              type="button"
-                              className="rounded-full w-full bg-slate-200 px-3 py-1 text-slate-700 transition hover:bg-slate-300"
+                              onClick={() => deleteProduct(product.id)}
+                              className="rounded-full bg-red-500 px-3 py-1 text-white transition hover:bg-red-600"
                             >
-                              Comprar
+                              Eliminar
                             </button>
                           </div>
                         </td>
@@ -160,7 +215,6 @@ const Products = () => {
 
                   <div className="flex flex-wrap items-center gap-2">
                     <button
-                      type="button"
                       onClick={() =>
                         handlePageChange(Math.max(1, currentPage - 1))
                       }
@@ -172,10 +226,10 @@ const Products = () => {
 
                     {[...Array(totalPages)].map((_, index) => {
                       const page = index + 1;
+
                       return (
                         <button
                           key={page}
-                          type="button"
                           onClick={() => handlePageChange(page)}
                           className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
                             currentPage === page
@@ -189,7 +243,6 @@ const Products = () => {
                     })}
 
                     <button
-                      type="button"
                       onClick={() =>
                         handlePageChange(Math.min(totalPages, currentPage + 1))
                       }
@@ -204,6 +257,69 @@ const Products = () => {
             )}
           </div>
         </div>
+
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
+              <h2 className="mb-6 text-2xl font-semibold text-slate-900">
+                {editingProduct ? "Editar Producto" : "Nuevo Producto"}
+              </h2>
+
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Título"
+                  value={newProduct.title}
+                  onChange={handleInputChange}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+                />
+
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="Precio"
+                  value={newProduct.price}
+                  onChange={handleInputChange}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+                />
+
+                <textarea
+                  name="description"
+                  placeholder="Descripción"
+                  value={newProduct.description}
+                  onChange={handleInputChange}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+                />
+
+                <input
+                  type="text"
+                  name="category"
+                  placeholder="Categoría"
+                  value={newProduct.category}
+                  onChange={handleInputChange}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={resetForm}
+                  className="rounded-2xl bg-slate-200 px-5 py-3 text-slate-700"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  onClick={handleSaveProduct}
+                  className="rounded-2xl bg-indigo-600 px-5 py-3 text-white"
+                >
+                  {editingProduct ? "Actualizar" : "Agregar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

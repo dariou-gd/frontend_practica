@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 
@@ -12,9 +12,11 @@ const Login = () => {
   const { login } = useAuth();
   const { token } = useAuth();
 
-  if (!token) {
-    navigate("/");
-  }
+  useEffect(() => {
+    if (token) {
+      navigate("/home");
+    }
+  }, [token, navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
