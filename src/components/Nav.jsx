@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router";
 
 const Nav = () => {
   return (
@@ -7,30 +8,30 @@ const Nav = () => {
         <div className="text-lg font-bold">MyApp</div>
         <ul className="flex space-x-4">
           <li>
-            <a href="/home" className="hover:text-gray-200">
+            <Link to="/home" className="hover:text-gray-200">
               Home
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a href="/about" className="hover:text-gray-200">
+            <Link to="/about" className="hover:text-gray-200">
               About
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/contact" className="hover:text-gray-200">
+            <Link to="/contact" className="hover:text-gray-200">
               Contact
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/products" className="hover:text-gray-200">
+            <Link to="/products" className="hover:text-gray-200">
               Products
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/" className="hover:text-gray-200">
+            <Link to="/" className="hover:text-gray-200">
               Login
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

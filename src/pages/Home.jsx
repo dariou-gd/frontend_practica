@@ -1,41 +1,31 @@
 import React from "react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import Nav from '../components/Nav'
+import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
   const navigate = useNavigate();
-  const token =
-    localStorage.getItem("fakestore_token") ||
-    sessionStorage.getItem("fakestore_token");
-  const user =
-    localStorage.getItem("fakestore_user") ||
-    sessionStorage.getItem("fakestore_user") ||
-    "";
+  const { token, user, logout, loadingAuth } = useAuth();
 
   useEffect(() => {
+    if (loadingAuth) return;
+
     if (!token) {
       navigate("/");
     }
   }, [navigate, token]);
 
   const handleLogout = () => {
-    localStorage.removeItem("fakestore_token");
-    localStorage.removeItem("fakestore_user");
-    localStorage.removeItem("fakestore_email");
-    sessionStorage.removeItem("fakestore_token");
-    sessionStorage.removeItem("fakestore_user");
-    sessionStorage.removeItem("fakestore_email");
+    logout();
     navigate("/");
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
-      {token && <Nav />}
       <div className="flex flex-col items-center justify-center flex-grow">
         <header className="text-center">
           <h1 className="text-4xl font-bold text-blue-600">
-            Bienvenido{user ? `, ${user}` : ""}
+            Bienvenido{user ? `, ${user.email}` : ""}
           </h1>
           <p className="mt-4 text-gray-700">
             Explora las funcionalidades y disfruta de la experiencia.

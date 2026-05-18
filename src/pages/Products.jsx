@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import Nav from "../components/Nav";
+import { useAuth } from "../hooks/useAuth";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -9,18 +9,25 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
-  const token =
-    localStorage.getItem("fakestore_token") ||
-    sessionStorage.getItem("fakestore_token");
+  const { token, loadingAuth } = useAuth();
 
   const totalPages = Math.max(1, Math.ceil(products.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
+  const [showModal, setShowModal] = useState(false);
+
+  const [newProduct, setNewProduct] = useState({
+    title: "",
+    price: "",
+    description: "",
+    category: "",
+  });
 
   useEffect(() => {
+    if (loadingAuth) return;
+
     if (!token) {
       navigate("/");
-      return;
     }
 
     const fetchProducts = async () => {
@@ -48,18 +55,27 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {token && <Nav />}
-
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold text-slate-900">Productos</h1>
           </div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
-            <p className="text-sm text-slate-500">Total productos</p>
-            <p className="mt-1 text-xl font-semibold text-slate-900">
-              {products.length}
-            </p>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowModal(true)}
+              className="rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500"
+            >
+              Nuevo Producto
+            </button>
+
+            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
+              <p className="text-sm text-slate-500">Total productos</p>
+
+              <p className="mt-1 text-xl font-semibold text-slate-900">
+                {products.length}
+              </p>
+            </div>
           </div>
         </div>
 
